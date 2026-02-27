@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 
 @Entity
 public class Blog {
-    @Id 
+    @Id
     @GeneratedValue
     private Long id;
 
@@ -15,8 +15,6 @@ public class Blog {
 
     @NotNull
     private String content;
-
-    public String validationStatus; 
 
     public Long getId() {
         return this.id;
@@ -43,5 +41,6 @@ public class Blog {
         this.content = content;
     }
 
-    public Blog() {}
+    public Blog() {
+    }
 }
