@@ -1,53 +1,16 @@
 package ch.hftm.entity;
 
-import io.smallrye.common.constraint.NotNull;
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 
 @Entity
-public class Blog {
-    @Id
-    @GeneratedValue
-    private Long id;
-
-    private String title;
-
-    @NotNull
-    private String content;
-
+public class Blog extends PanacheEntity {
+    public String title;
+    public String content;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     public BlogStatus status = BlogStatus.PENDING;
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getContent() {
-        return this.content;
-    }
-
-    public Blog(String title, String content) {
-        this.title = title;
-        this.content = content;
-    }
-
-    public Blog() {
-    }
 }
