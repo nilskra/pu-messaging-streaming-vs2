@@ -1,7 +1,10 @@
 package ch.hftm.entity;
 
 import io.smallrye.common.constraint.NotNull;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
@@ -15,6 +18,10 @@ public class Blog {
 
     @NotNull
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    public BlogStatus status = BlogStatus.PENDING;
 
     public Long getId() {
         return this.id;
