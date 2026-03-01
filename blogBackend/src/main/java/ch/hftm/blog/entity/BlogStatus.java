@@ -1,4 +1,4 @@
-package ch.hftm.entity;
+package ch.hftm.blog.entity;
 
 public enum BlogStatus {
     PENDING,

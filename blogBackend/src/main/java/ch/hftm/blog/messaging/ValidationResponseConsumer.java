@@ -1,11 +1,12 @@
-package ch.hftm.messaging;
+package ch.hftm.blog.messaging;
 
-import ch.hftm.control.BlogService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
+
+import ch.hftm.blog.control.BlogService;
 import io.smallrye.common.annotation.Blocking;
 
 @ApplicationScoped

@@ -1,4 +1,4 @@
-package ch.hftm.messaging;
+package ch.hftm.blog.messaging;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

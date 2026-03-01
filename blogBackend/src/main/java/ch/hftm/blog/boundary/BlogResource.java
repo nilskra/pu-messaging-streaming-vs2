@@ -1,18 +1,15 @@
-package ch.hftm.boundary;
+package ch.hftm.blog.boundary;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
-import ch.hftm.control.BlogService;
-import ch.hftm.entity.Blog;
-import ch.hftm.entity.BlogStatus;
-import ch.hftm.messaging.ValidationRequest;
-import ch.hftm.messaging.ValidationRequestProducer;
+import ch.hftm.blog.control.BlogService;
+import ch.hftm.blog.entity.Blog;
+import ch.hftm.blog.entity.BlogStatus;
+import ch.hftm.blog.messaging.ValidationRequest;
+import ch.hftm.blog.messaging.ValidationRequestProducer;
 import io.quarkus.logging.Log;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -23,11 +20,10 @@ import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 
 @Tag(name = "Blog")
-@Path("blog")
+@Path("blogs")
 public class BlogResource {
 
     @Inject
@@ -45,6 +41,67 @@ public class BlogResource {
     @GET
     public List<Blog> listApproved() {
         return Blog.list("status", BlogStatus.APPROVED);
+    }
+
+    @GET
+    @Path("{id}")
+    @PermitAll
+    public Response getBlog(@PathParam("id") long id) {
+
+        Log.infof("GET /blog/%d", id);
+
+        Blog blog = blogService.getBlog(id);
+        if (blog == null) {
+            Log.warnf("Blog with id=%d not found", id);
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(blog).build();
+    }
+
+    @PATCH
+    @Path("{id}")
+    @RolesAllowed("author")
+    public Response changeBlog(@PathParam("id") long id, Blog updatedBlog) {
+
+        Log.infof("PATCH /blog/%d - updating blog", id);
+
+        Blog updated = blogService.updateBlog(id, updatedBlog);
+
+        if (updated == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(updated).build();
+    }
+
+    @DELETE
+    @Path("/delete/{id}")
+    @RolesAllowed({ "author", "admin" })
+    @APIResponse(responseCode = "204", description = "Deleted")
+    public Response deleteBlogById(@PathParam("id") Long id) {
+
+        Log.infof("DELETE /blog/delete/%d", id);
+
+        boolean deleted = blogService.deleteBlogById(id);
+        if (!deleted) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/delete")
+    @RolesAllowed("admin")
+    @APIResponse(responseCode = "204", description = "All blogs deleted")
+    public Response deleteAllBlogs() {
+
+        Log.warn("DELETE /blog/delete - deleting ALL blogs!");
+
+        blogService.deleteBlogs();
+
+        return Response.noContent().build();
     }
 
     // @GET

@@ -1,4 +1,4 @@
-package ch.hftm.messaging;
+package ch.hftm.blog.messaging;
 
 public class ValidationRequest {
     public Long blogId;
