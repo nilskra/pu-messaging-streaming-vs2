@@ -1,62 +1,89 @@
 # blogBackend
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+REST-Backend (Quarkus) für Blogposts inkl. asynchroner Textvalidierung über Kafka/Redpanda.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Was macht der Service?
 
-## Running the application in dev mode
+* Persistiert Blogposts in einer Datenbank (MySQL im `prod`-Profil).
+* Publiziert nach dem Erstellen eines Blogposts eine **Validierungsanfrage** nach Kafka.
+* Konsumiert das **Validierungsergebnis** und setzt den Status des Blogposts auf `APPROVED` oder `REJECTED`.
 
-You can run your application in dev mode that enables live coding using:
+## REST API
 
-```shell script
+Base URL: `http://localhost:8080`
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `POST` | `/blogs` | Blog erstellen (Status → `PENDING` und Validation Request wird gesendet) |
+| `GET` | `/blogs` | Liste aller **approved** Blogs |
+| `GET` | `/blogs/{id}` | Blog nach ID (auch `PENDING` / `REJECTED`) |
+| `PATCH` | `/blogs/{id}` | Blog ändern (setzt Status wieder auf `PENDING`) |
+| `DELETE` | `/blogs/delete/{id}` | Blog löschen |
+| `DELETE` | `/blogs/delete` | Alle Blogs löschen |
+
+### Beispiel: Blog erstellen
+
+```bash
+curl -s -X POST http://localhost:8080/blogs \
+  -H 'Content-Type: application/json' \
+  -d '{"title":"Mein Post","content":"Hello world"}'
+```
+
+## Messaging
+
+### Kafka Topics
+
+* Outgoing: `blog-validation-request` (Channel: `validation-requests`)
+* Incoming: `blog-validation-response` (Channel: `validation-responses`)
+
+### Payloads (JSON)
+
+**Request** (`blog-validation-request`)
+
+```json
+{ "blogId": 1, "text": "..." }
+```
+
+**Response** (`blog-validation-response`)
+
+```json
+{ "blogId": 1, "approved": true, "reason": "OK" }
+```
+
+## Konfiguration
+
+### Wichtige Environment Variables (Profil `prod`)
+
+| Variable | Beispiel | Zweck |
+|---|---|---|
+| `DB_JDBC_URL` | `jdbc:mysql://mysql:3306/blogdb` | JDBC URL |
+| `DB_USERNAME` | `app` | DB User |
+| `DB_PASSWORD` | `apppw` | DB Passwort |
+| `KAFKA_BOOTSTRAP_SERVERS` | `redpanda:9092` | Kafka Bootstrap Servers |
+
+> Hinweis: Im Docker-Setup wird `QUARKUS_PROFILE=prod` verwendet.
+
+## Lokal starten
+
+## Lokal starten
+
+Im Repo-Root:
+
+```bash
+cd blogBackend
 ./mvnw quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+Dev UI at http://localhost:8080/q/dev während der Service läuft.
 
-## Packaging and running the application
+## Build
 
-The application can be packaged using:
-
-```shell script
-./mvnw package
+```bash
+./mvnw clean package
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+JAR starten:
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```bash
+java -jar target/quarkus-app/quarkus-run.jar
 ```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/blogBackend-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Related Guides
-
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- REST JSON-B ([guide](https://quarkus.io/guides/rest#json-serialisation)): JSON-B serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- JDBC Driver - MySQL ([guide](https://quarkus.io/guides/datasource)): Connect to the MySQL database via JDBC
-- SmallRye OpenAPI ([guide](https://quarkus.io/guides/openapi-swaggerui)): Document your REST APIs with OpenAPI - comes with Swagger UI
-- Messaging ([guide](https://quarkus.io/guides/messaging)): Produce and consume messages and implement event driven and data streaming applications
